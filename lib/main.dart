@@ -1,3 +1,4 @@
+import 'package:shoppinglist_app_mobile/add_item_dialog_box.dart';
 import 'package:shoppinglist_app_mobile/mock/item_data/DataMocker.dart';
 import 'package:shoppinglist_app_mobile/types/ItemStatus.dart';
 import 'package:flutter/foundation.dart';
@@ -94,18 +95,18 @@ class _MyHomePageState extends State<MyHomePage>
     // Setting up mocked data
     _ticketItemUpcoming1 = Item(
         itemName: "Mjölk",
-        flightStatus: ItemStatus.TO_BE_ADDED,
-        amount: "3");
+        itemStatus: ItemStatus.TO_BE_ADDED
+    );
     _ticketItemUpcoming2 = Item(
         itemName: "Bröd",
-        flightStatus: ItemStatus.TO_BE_ADDED,
-        amount: "1");
+        itemStatus: ItemStatus.TO_BE_ADDED
+    );
 
     for (int i = 0; i < 10; i++) {
       _spentTickets.add(Item(
           itemName: _mock.getRandomItem(),
-          flightStatus: ItemStatus.ADDED_TO_CART,
-          amount: _mock.getRandomAmount()));
+          itemStatus: ItemStatus.ADDED_TO_CART
+      ));
     }
   }
 
@@ -143,13 +144,32 @@ class _MyHomePageState extends State<MyHomePage>
                   children: [
                     Padding(
                       padding:
-                      EdgeInsets.only(left: 30, top: 40, bottom: 20),
-                      child: Text(
-                        "Inköpslista",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 40),
+                      EdgeInsets.only(left: 30, right: 40, top: 40, bottom: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Inköpslista",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 40),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.add_outlined, color: Colors.white, size: 45,),
+                            onPressed: () {
+                              showDialog(context: context,
+                                  builder: (BuildContext context){
+                                    return AddItemDialogBox(
+                                      title: "Lägg till ny vara",
+                                      itemName: "Här kan man skriva typ \"mjölk\" senare.",
+                                      text: "Lägg till!", key: ValueKey(context),
+                                    );
+                                  }
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
                     _ticketItemUpcoming1!,
@@ -205,11 +225,10 @@ class _MyHomePageState extends State<MyHomePage>
 
 class Item extends StatefulWidget {
   Item(
-      {Key? key, required this.amount, required this.itemName, required this.flightStatus})
+      {Key? key, required this.itemName, required this.itemStatus})
       : super(key: key);
-  final String amount;
   final String itemName;
-  final ItemStatus flightStatus;
+  final ItemStatus itemStatus;
 
   @override
   _ItemState createState() => _ItemState();
@@ -228,7 +247,7 @@ class _ItemState extends State<Item> {
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
               colors: [
-                widget.flightStatus == ItemStatus.ADDED_TO_CART
+                widget.itemStatus == ItemStatus.ADDED_TO_CART
                     ? Colors.green
                     : Colors.lightBlueAccent,
                 Colors.white,
@@ -237,8 +256,7 @@ class _ItemState extends State<Item> {
           ),
           child: ListTile(
               title: Text(widget.itemName),
-              subtitle: Text(widget.amount),
-              trailing: _getStatusIcon(widget.flightStatus)),
+              trailing: _getStatusIcon(widget.itemStatus)),
         ));
   }
 
