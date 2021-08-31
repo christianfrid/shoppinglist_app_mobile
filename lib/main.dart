@@ -1,4 +1,5 @@
 import 'package:shoppinglist_app_mobile/add_item_dialog_box.dart';
+import 'package:shoppinglist_app_mobile/mock/db/Database.dart';
 import 'package:shoppinglist_app_mobile/mock/item_data/DataMocker.dart';
 import 'package:shoppinglist_app_mobile/types/ItemStatus.dart';
 import 'package:flutter/foundation.dart';
@@ -50,6 +51,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
   DataMocker _mock = DataMocker();
+  ItemList itemList = new ItemList();
   Color gradientStart = Colors.transparent;
 
   AnimationController? _controller;
@@ -161,6 +163,7 @@ class _MyHomePageState extends State<MyHomePage>
                               showDialog(context: context,
                                   builder: (BuildContext context){
                                     return AddItemDialogBox(
+                                      itemList: itemList,
                                       title: "Lägg till ny vara",
                                       itemName: "Här kan man skriva typ \"mjölk\" senare.",
                                       text: "Lägg till!", key: ValueKey(context),

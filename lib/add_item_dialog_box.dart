@@ -1,11 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shoppinglist_app_mobile/mock/db/Database.dart';
 import 'package:shoppinglist_app_mobile/types/constants.dart';
 
 class AddItemDialogBox extends StatefulWidget {
   final String title, itemName, text;
+  final ItemList itemList;
 
-  const AddItemDialogBox({required Key key, required this.title, required this.itemName, required this.text}) : super(key: key);
+  const AddItemDialogBox({required Key key, required this.itemList, required this.title, required this.itemName, required this.text}) : super(key: key);
 
   @override
   _AddItemDialogBoxState createState() => _AddItemDialogBoxState();
@@ -46,16 +48,20 @@ class _AddItemDialogBoxState extends State<AddItemDialogBox> {
             children: <Widget>[
               Text(widget.title,style: TextStyle(fontSize: 22,fontWeight: FontWeight.w600),),
               SizedBox(height: 15,),
-              Text(widget.itemName,style: TextStyle(fontSize: 15),textAlign: TextAlign.center,),
-              SizedBox(height: 22,),
-              Align(
-                alignment: Alignment.bottomRight,
-                child: TextButton(
-                    onPressed: (){
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(widget.text,style: TextStyle(fontSize: 18),)),
+              TextField(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Vad ska handlas?',
+                ),
+                onSubmitted: (String value) {
+                  if(value != "") {
+                    widget.itemList.addItemToList(value);
+                    widget.itemList.printList();
+                  }
+                  Navigator.of(context).pop();
+                },
               ),
+              SizedBox(height: 22,),
             ],
           ),
         ),
