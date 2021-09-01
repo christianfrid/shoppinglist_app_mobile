@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:shoppinglist_app_mobile/mock/db/Database.dart';
-import 'package:shoppinglist_app_mobile/types/constants.dart';
+import 'package:shoppinglist_app_mobile/shopping_list_repository.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/models/constants.dart';
 
 class AddItemDialogBox extends StatefulWidget {
   final String title, itemName, text;
-  final ItemList itemList;
+  final ShoppingRepository shoppingRepository;
 
-  const AddItemDialogBox({required Key key, required this.itemList, required this.title, required this.itemName, required this.text}) : super(key: key);
+  const AddItemDialogBox({required Key key, required this.shoppingRepository, required this.title, required this.itemName, required this.text}) : super(key: key);
 
   @override
   _AddItemDialogBoxState createState() => _AddItemDialogBoxState();
@@ -55,8 +55,8 @@ class _AddItemDialogBoxState extends State<AddItemDialogBox> {
                 ),
                 onSubmitted: (String value) {
                   if(value != "") {
-                    widget.itemList.addItemToList(value);
-                    widget.itemList.printList();
+                    widget.shoppingRepository.addItemToShoppingList(value);
+                    widget.shoppingRepository.printItems();
                   }
                   Navigator.of(context).pop();
                 },

@@ -1,4 +1,4 @@
 enum ItemStatus {
-  TO_BE_ADDED,
+  IN_SHOPPING_LIST,
   ADDED_TO_CART
 }
