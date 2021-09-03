@@ -1,22 +1,51 @@
 import 'dart:async';
-import 'package:shoppinglist_app_mobile/shopping_list/models/ItemStatus.dart';
+import 'dart:convert';
+import 'dart:developer';
+import 'package:http/http.dart' as http;
 import 'package:shoppinglist_app_mobile/shopping_list/models/item.dart';
 
-const _delay = Duration(milliseconds: 800);
+abstract class BackendInterface {
+  /// Throws [NetworkException]
+  Future<List<Item>> fetchShoppingListItems();
+  Future<List<Item>> addItemToShoppingList(String itemName);
+  Future<List<Item>> addItemToCart(Item item);
+}
 
-class ShoppingRepository {
-  final _items = <Item>[];
+class ShoppingRepository implements BackendInterface {
 
-  //Future<List<String>> loadCatalog() => Future.delayed(_delay, () => _catalog);
-
-  Future<List<Item>> loadShoppingListItems() => Future.delayed(_delay, () => _items);
-
-  void addItemToShoppingList(String itemName) => _items.add(Item(itemName, ItemStatus.IN_SHOPPING_LIST));
-
-  void addItemToCart(Item item) {
-    int updateIndex = _items.indexOf(item);
-    _items.elementAt(updateIndex).itemStatus = ItemStatus.ADDED_TO_CART;
+  List<Item> _convertItemsResponse(String json){
+    print((jsonDecode(json) as List));
+    return (jsonDecode(json) as List).map((i) => Item.fromJson(i)).toList();
   }
 
-  void printItems() => print("Items are currently: " + _items.toString());
+  @override
+  Future<List<Item>> addItemToCart(Item item) async {
+    return Future.delayed(
+      const Duration(milliseconds: 200),
+          () => List.empty(),
+    );
+  }
+
+  @override
+  Future<List<Item>> addItemToShoppingList(String itemName) async {
+    return Future.delayed(
+      const Duration(milliseconds: 200),
+          () => List.empty(),
+    );
+  }
+
+  @override
+  Future<List<Item>> fetchShoppingListItems() async {
+    print('Fetching current shopping list...');
+    final response = await http.get(
+        Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist/items')
+    );
+    if (response.statusCode == 200) {
+      return _convertItemsResponse(response.body);
+    }
+    log("Response != 200. Returning empty list.");
+    return List.empty();
+  }
+
 }
+

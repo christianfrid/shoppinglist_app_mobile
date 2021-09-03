@@ -1,19 +1,28 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:shoppinglist_app_mobile/shopping_list_repository.dart';
+import 'package:provider/provider.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_bloc.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_event.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/models/constants.dart';
 
 class AddItemDialogBox extends StatefulWidget {
   final String title, itemName, text;
-  final ShoppingRepository shoppingRepository;
 
-  const AddItemDialogBox({required Key key, required this.shoppingRepository, required this.title, required this.itemName, required this.text}) : super(key: key);
+  const AddItemDialogBox({required Key key, required this.title, required this.itemName, required this.text}) : super(key: key);
 
   @override
   _AddItemDialogBoxState createState() => _AddItemDialogBoxState();
 }
 
 class _AddItemDialogBoxState extends State<AddItemDialogBox> {
+  late ShoppingListBloc _shoppingListBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _shoppingListBloc = context.read<ShoppingListBloc>();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -55,8 +64,7 @@ class _AddItemDialogBoxState extends State<AddItemDialogBox> {
                 ),
                 onSubmitted: (String value) {
                   if(value != "") {
-                    widget.shoppingRepository.addItemToShoppingList(value);
-                    widget.shoppingRepository.printItems();
+                    _shoppingListBloc.add(AddNewItemEvent(value));
                   }
                   Navigator.of(context).pop();
                 },

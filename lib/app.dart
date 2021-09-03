@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shoppinglist_app_mobile/shopping_list/view/shopping_list_page.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/view/list_page.dart';
 import 'package:shoppinglist_app_mobile/shopping_list_repository.dart';
 
 class App extends StatelessWidget {
@@ -34,7 +34,7 @@ class App extends StatelessWidget {
             indent: 10,
             endIndent: 30,
           )),
-      home: ShoppingListPage(title: 'Inköpslista', shoppingRepository: shoppingRepository),
+      home: ListPage(title: 'Inköpslista', shoppingRepository: shoppingRepository),
     );
   }
 }
