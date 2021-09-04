@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:enum_to_string/enum_to_string.dart';
 import 'package:http/http.dart' as http;
+import 'package:shoppinglist_app_mobile/shopping_list/models/ItemStatus.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/models/item.dart';
 
 abstract class BackendInterface {
@@ -20,23 +22,47 @@ class ShoppingRepository implements BackendInterface {
 
   @override
   Future<List<Item>> addItemToCart(Item item) async {
-    return Future.delayed(
-      const Duration(milliseconds: 200),
-          () => List.empty(),
+    log("Trying to set \"" + item.itemDesc + "\" to ADDED_TO_CART...");
+    final response = await http.put(
+      Uri.parse('http://existenz.ew.r.appspot.com/v1/shoppinglist/item/update'),
+      headers: <String, String>{
+        "Content-Type": "application/json; charset=UTF-8",
+      },
+      body: jsonEncode(<String, String>{
+        "item_desc": item.itemDesc,
+        "item_status": EnumToString.convertToString(ItemStatus.IN_SHOPPING_LIST)
+      }),
     );
+    if (response.statusCode == 200) {
+      return _convertItemsResponse(response.body);
+    }
+    log("Response != 200. Returning empty list.");
+    return List.empty();
   }
 
   @override
-  Future<List<Item>> addItemToShoppingList(String itemName) async {
-    return Future.delayed(
-      const Duration(milliseconds: 200),
-          () => List.empty(),
+  Future<List<Item>> addItemToShoppingList(String itemDesc) async {
+    log("Trying to add \"" + itemDesc + "\" to shopping list...");
+    final response = await http.post(
+      Uri.parse('http://existenz.ew.r.appspot.com/v1/shoppinglist/item/add'),
+      headers: <String, String>{
+        "Content-Type": "application/json; charset=UTF-8",
+      },
+      body: jsonEncode(<String, String>{
+        "item_desc": itemDesc,
+        "item_status": EnumToString.convertToString(ItemStatus.IN_SHOPPING_LIST)
+      }),
     );
+    if (response.statusCode == 200) {
+      return _convertItemsResponse(response.body);
+    }
+    log("Response != 200. Returning empty list.");
+    return List.empty();
   }
 
   @override
   Future<List<Item>> fetchShoppingListItems() async {
-    print('Fetching current shopping list...');
+    log('Fetching current shopping list...');
     final response = await http.get(
         Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist/items')
     );
