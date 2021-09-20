@@ -24,7 +24,7 @@ class ShoppingRepository implements BackendInterface {
   Future<List<Item>> addItemToCart(Item item) async {
     log("Trying to set \"" + item.itemDesc + "\" to ADDED_TO_CART...");
     final response = await http.put(
-      Uri.parse('http://existenz.ew.r.appspot.com/v1/shoppinglist/item/update'),
+      Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist/item/update'),
       headers: <String, String>{
         "Content-Type": "application/json; charset=UTF-8",
       },
@@ -44,7 +44,7 @@ class ShoppingRepository implements BackendInterface {
   Future<List<Item>> addItemToShoppingList(String itemDesc) async {
     log("Trying to add \"" + itemDesc + "\" to shopping list...");
     final response = await http.post(
-      Uri.parse('http://existenz.ew.r.appspot.com/v1/shoppinglist/item/add'),
+      Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist/item/add'),
       headers: <String, String>{
         "Content-Type": "application/json; charset=UTF-8",
       },

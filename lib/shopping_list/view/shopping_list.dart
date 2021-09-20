@@ -9,7 +9,7 @@ import 'package:shoppinglist_app_mobile/shopping_list/view/add_item_dialog_box.d
 import 'package:shoppinglist_app_mobile/shopping_list/view/bg_animation/background.dart';
 
 class ShoppingList extends StatefulWidget {
-  final AnimationController? controller;
+  final AnimationController controller;
 
   const ShoppingList({required Key key, required this.controller})
       : super(key: key);
@@ -19,40 +19,40 @@ class ShoppingList extends StatefulWidget {
 }
 
 class _ShoppingListState extends State<ShoppingList> {
-  late ShoppingListBloc _shoppingListBloc;
   Color gradientStart = Colors.transparent;
 
   @override
   void initState() {
     super.initState();
-    _shoppingListBloc = context.read<ShoppingListBloc>();
-    _shoppingListBloc.add(GetShoppingListEvent());
+    context.read<ShoppingListBloc>()..add(GetShoppingListEvent());
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ShoppingListBloc, ShoppingState>(
+      bloc: context.read<ShoppingListBloc>(),
       builder: (context, state) {
         switch (state.status) {
           case ShoppingListStatus.failure:
             return const Center(child: Text('failed to fetch items'));
           case ShoppingListStatus.success:
-
-            List<ItemContainer> addedToShoppingList = state.items.where((item) => item
-                .itemStatus == ItemStatus.IN_SHOPPING_LIST).map((item) => ItemContainer
-              (itemDesc: item.itemDesc, itemStatus: item.itemStatus))
+            List<ItemContainer> addedToShoppingList = state.items
+                .where((item) => item.itemStatus == ItemStatus.IN_SHOPPING_LIST)
+                .map((item) => ItemContainer(
+                    itemDesc: item.itemDesc, itemStatus: item.itemStatus))
                 .toList();
 
-            List<ItemContainer> addedToCart = state.items.where((item) => item
-                .itemStatus == ItemStatus.ADDED_TO_CART).map((item) => ItemContainer
-              (itemDesc: item.itemDesc, itemStatus: item.itemStatus))
+            List<ItemContainer> addedToCart = state.items
+                .where((item) => item.itemStatus == ItemStatus.ADDED_TO_CART)
+                .map((item) => ItemContainer(
+                    itemDesc: item.itemDesc, itemStatus: item.itemStatus))
                 .toList();
 
             var itemWidgetList = <Widget>[];
             itemWidgetList.add(
               Padding(
-                padding: EdgeInsets.only(
-                    left: 30, right: 40, top: 40, bottom: 20),
+                padding:
+                    EdgeInsets.only(left: 30, right: 40, top: 40, bottom: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -73,17 +73,14 @@ class _ShoppingListState extends State<ShoppingList> {
                         showDialog(
                             context: context,
                             builder: (BuildContext context) {
-                              return BlocProvider(
-                                create: (_) => _shoppingListBloc,
-                                child: AddItemDialogBox(
-                                  title: "Lägg till ny vara",
-                                  itemName:
-                                  "Här kan man skriva typ \"mjölk\" senare.",
-                                  text: "Lägg till!",
-                                  key: ValueKey(context),
-                                ),
-                              );
-                            });
+                              return AddItemDialogBox();
+                            }).then((value) => () {
+                              if (value != null) {
+                                context
+                                    .read<ShoppingListBloc>()
+                                    .add(AddNewItemEvent(value));
+                              }
+                            }());
                       },
                     ),
                   ],
@@ -104,17 +101,15 @@ class _ShoppingListState extends State<ShoppingList> {
               ),
             );
             itemWidgetList.addAll(addedToCart);
-            itemWidgetList.add(
-                Padding(
-                  padding: EdgeInsets.only(top: 50, bottom: 30),
-                  child: Center(
-                    child: Text(
-                      "Copyrajtat av Chres Inc.",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                )
-            );
+            itemWidgetList.add(Padding(
+              padding: EdgeInsets.only(top: 50, bottom: 30),
+              child: Center(
+                child: Text(
+                  "Copyrajtat av Chres Inc.",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ));
 
             return Stack(
               children: <Widget>[
@@ -126,7 +121,7 @@ class _ShoppingListState extends State<ShoppingList> {
                       colors: [
                         gradientStart,
                         getBackground().evaluate(
-                            AlwaysStoppedAnimation(widget.controller!.value))!
+                            AlwaysStoppedAnimation(widget.controller.value))!
                       ],
                     ).createShader(rect);
                   },
@@ -165,27 +160,31 @@ class ItemContainer extends StatefulWidget {
 }
 
 class _ItemContainerState extends State<ItemContainer> {
+  final double _opacity = 0.6;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-        padding: EdgeInsets.only(left: 30, right: 30, top: 10, bottom: 10),
+        padding: EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 3),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.tealAccent,
-            borderRadius: BorderRadius.all(Radius.circular(20)),
+            borderRadius: BorderRadius.all(Radius.circular(8)),
             gradient: LinearGradient(
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
               colors: [
                 widget.itemStatus == ItemStatus.ADDED_TO_CART
-                    ? Colors.green
-                    : Colors.lightBlueAccent,
-                Colors.white,
+                    ? Colors.green.withOpacity(_opacity)
+                    : Colors.tealAccent.withOpacity(_opacity),
+                Colors.white.withOpacity(_opacity),
               ],
             ),
           ),
           child: ListTile(
-              title: Text(widget.itemDesc),
+              title: Text(
+                widget.itemDesc,
+                style: TextStyle(color: Colors.white),
+              ),
               trailing: _getStatusIcon(widget.itemStatus)),
         ));
   }
@@ -195,7 +194,7 @@ class _ItemContainerState extends State<ItemContainer> {
       case ItemStatus.IN_SHOPPING_LIST:
         return Icon(Icons.add_shopping_cart, color: Colors.white);
       case ItemStatus.ADDED_TO_CART:
-        return Icon(Icons.check_circle, color: Colors.green[800]);
+        return Icon(Icons.check_circle, color: Colors.lightGreen);
       default:
         return Icon(Icons.error, color: Colors.red[800]);
     }

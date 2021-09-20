@@ -1,14 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_bloc.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/view/shopping_list.dart';
-import 'package:shoppinglist_app_mobile/shopping_list_repository.dart';
 
 class ListPage extends StatefulWidget {
-  ListPage({Key? key, required this.title, required this.shoppingRepository}) : super(key: key);
+  ListPage({Key? key, required this.title}) : super(key: key);
   final String title;
-  final ShoppingRepository shoppingRepository;
 
   @override
   _ListPageState createState() => _ListPageState();
@@ -16,8 +12,7 @@ class ListPage extends StatefulWidget {
 
 class _ListPageState extends State<ListPage>
     with SingleTickerProviderStateMixin {
-
-  AnimationController? _controller;
+  late AnimationController _controller;
 
   @override
   void initState() {
@@ -29,14 +24,20 @@ class _ListPageState extends State<ListPage>
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-        animation: _controller!,
+        animation: _controller,
         builder: (context, child) {
           return Scaffold(
-            body: BlocProvider(
-              create: (_) => ShoppingListBloc(shoppingRepository: widget.shoppingRepository),
-              child: ShoppingList(controller: _controller, key: ValueKey("ListPage"),),
+            body: ShoppingList(
+              controller: _controller,
+              key: ValueKey("ListPage"),
             ),
           );
         });
