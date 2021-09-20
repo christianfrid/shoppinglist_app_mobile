@@ -24,25 +24,25 @@ class App extends StatelessWidget {
         SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
       }
     }
-    return BlocProvider(
-      lazy: false,
-      create: (_) => ShoppingListBloc(shoppingRepository: ShoppingRepository()),
-      child: MaterialApp(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-            primarySwatch: Colors.blue,
-            visualDensity: VisualDensity.adaptivePlatformDensity,
-            dividerTheme: DividerThemeData(
-              color: Colors.white,
-              thickness: 2,
-              indent: 10,
-              endIndent: 30,
-            )),
-        initialRoute: '/',
-        routes: {
-          '/': (context) => ListPage(title: 'Inköpslista'),
-        },
-      ),
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+          dividerTheme: DividerThemeData(
+            color: Colors.white,
+            thickness: 2,
+            indent: 10,
+            endIndent: 30,
+          )),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => BlocProvider(
+            lazy: false,
+            create: (_) =>
+                ShoppingListBloc(shoppingRepository: ShoppingRepository()),
+            child: ListPage(title: 'Inköpslista')),
+      },
     );
   }
 }

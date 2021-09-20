@@ -30,7 +30,6 @@ class _ShoppingListState extends State<ShoppingList> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ShoppingListBloc, ShoppingState>(
-      bloc: context.read<ShoppingListBloc>(),
       builder: (context, state) {
         switch (state.status) {
           case ShoppingListStatus.failure:
@@ -69,18 +68,14 @@ class _ShoppingListState extends State<ShoppingList> {
                         color: Colors.white,
                         size: 45,
                       ),
-                      onPressed: () {
-                        showDialog(
+                      onPressed: () async {
+                        var result = await showDialog(
                             context: context,
                             builder: (BuildContext context) {
                               return AddItemDialogBox();
-                            }).then((value) => () {
-                              if (value != null) {
-                                context
-                                    .read<ShoppingListBloc>()
-                                    .add(AddNewItemEvent(value));
-                              }
-                            }());
+                            });
+                        context.read<ShoppingListBloc>()
+                          ..add(AddNewItemEvent(result));
                       },
                     ),
                   ],

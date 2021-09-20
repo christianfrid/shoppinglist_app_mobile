@@ -47,7 +47,9 @@ class AddItemDialogBox extends StatelessWidget {
                     ),
                     onSubmitted: (String value) {
                       if (value != "") {
-                        Navigator.of(context)..pop(value);
+                        Navigator.of(context)
+                          ..pop(value)
+                          ..pushNamed('/');
                       }
                       Navigator.of(context).pop();
                     },
