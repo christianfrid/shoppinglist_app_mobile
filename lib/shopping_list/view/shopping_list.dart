@@ -5,6 +5,7 @@ import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_bloc.da
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_event.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_state.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/models/ItemStatus.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/models/item.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/view/add_item_dialog_box.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/view/bg_animation/background.dart';
 
@@ -20,126 +21,125 @@ class ShoppingList extends StatefulWidget {
 
 class _ShoppingListState extends State<ShoppingList> {
   Color gradientStart = Colors.transparent;
+  late ShoppingListBloc _shoppingListBloc;
 
   @override
   void initState() {
     super.initState();
-    context.read<ShoppingListBloc>()..add(GetShoppingListEvent());
+    _shoppingListBloc = context.read<ShoppingListBloc>()
+      ..add(GetShoppingListEvent());
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ShoppingListBloc, ShoppingState>(
-      builder: (context, state) {
-        switch (state.status) {
-          case ShoppingListStatus.failure:
-            return const Center(child: Text('failed to fetch items'));
-          case ShoppingListStatus.success:
-            List<ItemContainer> addedToShoppingList = state.items
-                .where((item) => item.itemStatus == ItemStatus.IN_SHOPPING_LIST)
-                .map((item) => ItemContainer(
-                    itemDesc: item.itemDesc, itemStatus: item.itemStatus))
-                .toList();
-
-            List<ItemContainer> addedToCart = state.items
-                .where((item) => item.itemStatus == ItemStatus.ADDED_TO_CART)
-                .map((item) => ItemContainer(
-                    itemDesc: item.itemDesc, itemStatus: item.itemStatus))
-                .toList();
-
-            var itemWidgetList = <Widget>[];
-            itemWidgetList.add(
-              Padding(
-                padding:
-                    EdgeInsets.only(left: 30, right: 40, top: 40, bottom: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Inköpslista",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 40),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.add_outlined,
-                        color: Colors.white,
-                        size: 45,
-                      ),
-                      onPressed: () async {
-                        var result = await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AddItemDialogBox();
-                            });
-                        context.read<ShoppingListBloc>()
-                          ..add(AddNewItemEvent(result));
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            );
-            itemWidgetList.addAll(addedToShoppingList);
-            itemWidgetList.add(
-              Padding(
-                padding: EdgeInsets.only(left: 30, top: 30),
-                child: Row(children: [
-                  Text(
-                    "Tillagt i kundvagnen",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Expanded(child: Divider())
-                ]),
-              ),
-            );
-            itemWidgetList.addAll(addedToCart);
-            itemWidgetList.add(Padding(
-              padding: EdgeInsets.only(top: 50, bottom: 30),
-              child: Center(
-                child: Text(
-                  "Copyrajtat av Chres Inc.",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ));
-
-            return Stack(
-              children: <Widget>[
-                ShaderMask(
-                  shaderCallback: (rect) {
-                    return LinearGradient(
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft,
-                      colors: [
-                        gradientStart,
-                        getBackground().evaluate(
-                            AlwaysStoppedAnimation(widget.controller.value))!
-                      ],
-                    ).createShader(rect);
-                  },
-                  blendMode: BlendMode.srcATop,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: ExactAssetImage(
-                            'assets/images/github_globe_edit1.jpg'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-                ListView(
-                  children: itemWidgetList,
-                ),
+    return Stack(
+      children: <Widget>[
+        ShaderMask(
+          shaderCallback: (rect) {
+            return LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [
+                gradientStart,
+                getBackground()
+                    .evaluate(AlwaysStoppedAnimation(widget.controller.value))!
               ],
-            );
-          default:
-            return const Center(child: CircularProgressIndicator());
-        }
-      },
+            ).createShader(rect);
+          },
+          blendMode: BlendMode.srcATop,
+          child: Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: ExactAssetImage('assets/images/github_globe_edit1.jpg'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+        ListView(
+          children: [
+            Padding(
+              padding:
+                  EdgeInsets.only(left: 30, right: 40, top: 40, bottom: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Inköpslista",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 40),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.add_outlined,
+                      color: Colors.white,
+                      size: 45,
+                    ),
+                    onPressed: () async {
+                      var result = await showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AddItemDialogBox();
+                          });
+                      _shoppingListBloc.add(AddNewItemEvent(result));
+                    },
+                  ),
+                ],
+              ),
+            ),
+            BlocBuilder<ShoppingListBloc, ShoppingState>(
+              builder: (BuildContext context, ShoppingState state) {
+                switch (state.status) {
+                  case ShoppingListStatus.failure:
+                    return Center(
+                      child: Text(
+                        'Failed to fetch items',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    );
+                  case ShoppingListStatus.success:
+                    List<ItemContainer> addedToShoppingList = state
+                        .addedToShoppingList
+                        .map((item) => ItemContainer(
+                            itemDesc: item.itemDesc,
+                            itemStatus: item.itemStatus))
+                        .toList();
+                    List<ItemContainer> addedToCart = state.addedToCart
+                        .map((item) => ItemContainer(
+                            itemDesc: item.itemDesc,
+                            itemStatus: item.itemStatus))
+                        .toList();
+                    Widget ruler = Padding(
+                      padding: EdgeInsets.only(left: 30, top: 30),
+                      child: Row(children: [
+                        Text(
+                          "Tillagt i kundvagnen",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        Expanded(child: Divider())
+                      ]),
+                    );
+                    return ListView(
+                      shrinkWrap: true,
+                      children: List<Widget>.of(addedToShoppingList)
+                        ..add(ruler)
+                        ..addAll(addedToCart),
+                    );
+                  default:
+                    return Center(
+                      child: Text(
+                        'Failed to fetch items. Failed to get a state.',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    );
+                }
+              },
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

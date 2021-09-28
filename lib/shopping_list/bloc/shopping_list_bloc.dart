@@ -1,6 +1,8 @@
 import 'package:bloc/bloc.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_event.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_state.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/models/ItemStatus.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/models/item.dart';
 import 'package:shoppinglist_app_mobile/shopping_list_repository.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -33,7 +35,16 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
   Future<ShoppingState> _mapGetShoppingListToState() async {
     try {
       final items = await shoppingRepository.fetchShoppingListItems();
-      return state.copyWith(status: ShoppingListStatus.success, items: items);
+      List<Item> addedToShoppingList = items
+          .where((item) => item.itemStatus == ItemStatus.IN_SHOPPING_LIST)
+          .toList();
+      List<Item> addedToCart = items
+          .where((item) => item.itemStatus == ItemStatus.ADDED_TO_CART)
+          .toList();
+      return state.copyWith(
+          status: ShoppingListStatus.success,
+          addedToShoppingList: addedToShoppingList,
+          addedToCart: addedToCart);
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }
@@ -43,7 +54,16 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
     try {
       await shoppingRepository.addItemToShoppingList(event.itemName);
       final items = await shoppingRepository.fetchShoppingListItems();
-      return state.copyWith(status: ShoppingListStatus.success, items: items);
+      List<Item> addedToShoppingList = items
+          .where((item) => item.itemStatus == ItemStatus.IN_SHOPPING_LIST)
+          .toList();
+      List<Item> addedToCart = items
+          .where((item) => item.itemStatus == ItemStatus.ADDED_TO_CART)
+          .toList();
+      return state.copyWith(
+          status: ShoppingListStatus.success,
+          addedToShoppingList: addedToShoppingList,
+          addedToCart: addedToCart);
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }
@@ -53,7 +73,16 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
     try {
       await shoppingRepository.addItemToCart(event.item);
       final items = await shoppingRepository.fetchShoppingListItems();
-      return state.copyWith(status: ShoppingListStatus.success, items: items);
+      List<Item> addedToShoppingList = items
+          .where((item) => item.itemStatus == ItemStatus.IN_SHOPPING_LIST)
+          .toList();
+      List<Item> addedToCart = items
+          .where((item) => item.itemStatus == ItemStatus.ADDED_TO_CART)
+          .toList();
+      return state.copyWith(
+          status: ShoppingListStatus.success,
+          addedToShoppingList: addedToShoppingList,
+          addedToCart: addedToCart);
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }
