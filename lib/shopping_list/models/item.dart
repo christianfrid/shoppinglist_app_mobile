@@ -3,7 +3,7 @@ import 'package:shoppinglist_app_mobile/shopping_list/models/ItemStatus.dart';
 
 class Item {
   final String itemDesc;
-  final ItemStatus itemStatus;
+  ItemStatus itemStatus;
   Item(this.itemDesc, this.itemStatus);
 
   @override

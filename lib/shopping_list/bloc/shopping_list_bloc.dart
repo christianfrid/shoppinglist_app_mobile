@@ -1,10 +1,10 @@
 import 'package:bloc/bloc.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_event.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_state.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/models/ItemStatus.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/models/item.dart';
 import 'package:shoppinglist_app_mobile/shopping_list_repository.dart';
-import 'package:rxdart/rxdart.dart';
 
 class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
   ShoppingListBloc({required this.shoppingRepository}) : super(ShoppingState());
@@ -29,6 +29,8 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
       yield await _mapAddNewItemToState(event);
     } else if (event is AddToCartEvent) {
       yield await _mapAddToCartToState(event);
+    } else if (event is DeleteShoppingListEvent) {
+      yield await _mapDeleteShoppingListToState();
     }
   }
 
@@ -77,6 +79,28 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
           .where((item) => item.itemStatus == ItemStatus.IN_SHOPPING_LIST)
           .toList();
       List<Item> addedToCart = items
+          .where((item) => item.itemStatus == ItemStatus.ADDED_TO_CART)
+          .toList();
+      return state.copyWith(
+          status: ShoppingListStatus.success,
+          addedToShoppingList: addedToShoppingList,
+          addedToCart: addedToCart);
+    } on Exception {
+      return state.copyWith(status: ShoppingListStatus.failure);
+    }
+  }
+
+  Future<ShoppingState> _mapDeleteShoppingListToState() async {
+    try {
+      final items = await shoppingRepository.fetchShoppingListItems();
+      for (Item item in items) {
+        await shoppingRepository.deleteShoppingListItem(item);
+      }
+      final emptyList = await shoppingRepository.fetchShoppingListItems();
+      List<Item> addedToShoppingList = emptyList
+          .where((item) => item.itemStatus == ItemStatus.IN_SHOPPING_LIST)
+          .toList();
+      List<Item> addedToCart = emptyList
           .where((item) => item.itemStatus == ItemStatus.ADDED_TO_CART)
           .toList();
       return state.copyWith(

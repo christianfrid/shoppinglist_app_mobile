@@ -9,8 +9,9 @@ import 'package:shoppinglist_app_mobile/shopping_list/models/item.dart';
 abstract class BackendInterface {
   /// Throws [NetworkException]
   Future<List<Item>> fetchShoppingListItems();
-  Future<List<Item>> addItemToShoppingList(String itemName);
-  Future<List<Item>> addItemToCart(Item item);
+  Future<int> addItemToShoppingList(String itemName);
+  Future<int> addItemToCart(Item item);
+  Future<int> deleteShoppingListItem(Item item);
 }
 
 class ShoppingRepository implements BackendInterface {
@@ -21,27 +22,23 @@ class ShoppingRepository implements BackendInterface {
   }
 
   @override
-  Future<List<Item>> addItemToCart(Item item) async {
-    log("Trying to set \"" + item.itemDesc + "\" to ADDED_TO_CART...");
+  Future<int> addItemToCart(Item item) async {
+    log("Trying to set \"" + item.itemDesc + "\" to " + EnumToString.convertToString(ItemStatus.IN_SHOPPING_LIST) + "...");
     final response = await http.put(
       Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist/item/update'),
       headers: <String, String>{
         "Content-Type": "application/json; charset=UTF-8",
       },
-      body: jsonEncode(<String, String>{
+      body: jsonEncode(<String, dynamic>{
         "item_desc": item.itemDesc,
-        "item_status": EnumToString.convertToString(ItemStatus.IN_SHOPPING_LIST)
+        "item_status": EnumToString.convertToString(ItemStatus.ADDED_TO_CART)
       }),
     );
-    if (response.statusCode == 200) {
-      return _convertItemsResponse(response.body);
-    }
-    log("Response != 200. Returning empty list.");
-    return List.empty();
+    return response.statusCode;
   }
 
   @override
-  Future<List<Item>> addItemToShoppingList(String itemDesc) async {
+  Future<int> addItemToShoppingList(String itemDesc) async {
     log("Trying to add \"" + itemDesc + "\" to shopping list...");
     final response = await http.post(
       Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist/item/add'),
@@ -53,11 +50,7 @@ class ShoppingRepository implements BackendInterface {
         "item_status": EnumToString.convertToString(ItemStatus.IN_SHOPPING_LIST)
       }),
     );
-    if (response.statusCode == 200) {
-      return _convertItemsResponse(response.body);
-    }
-    log("Response != 200. Returning empty list.");
-    return List.empty();
+    return response.statusCode;
   }
 
   @override
@@ -71,6 +64,19 @@ class ShoppingRepository implements BackendInterface {
     }
     log("Response != 200. Returning empty list.");
     return List.empty();
+  }
+
+  @override
+  Future<int> deleteShoppingListItem(Item item) async {
+    log('Deleting shopping list...');
+    Map<String, String> queryParams = {
+      "itemDesc": item.itemDesc
+    };
+    String requestParams = Uri(queryParameters: queryParams).query;
+    final response = await http.delete(
+        Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist/item/delete?$requestParams')
+    );
+    return response.statusCode;
   }
 
 }

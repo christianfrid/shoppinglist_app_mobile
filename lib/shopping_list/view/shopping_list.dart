@@ -112,7 +112,7 @@ class _ShoppingListState extends State<ShoppingList> {
                             itemStatus: item.itemStatus))
                         .toList();
                     Widget ruler = Padding(
-                      padding: EdgeInsets.only(left: 30, top: 30),
+                      padding: EdgeInsets.only(left: 30, bottom: 10, top: 10),
                       child: Row(children: [
                         Text(
                           "Tillagt i kundvagnen",
@@ -121,19 +121,62 @@ class _ShoppingListState extends State<ShoppingList> {
                         Expanded(child: Divider())
                       ]),
                     );
+
+                    if (addedToShoppingList.isEmpty && addedToCart.isEmpty) {
+                      return Center(
+                          child: Text(
+                        "Listan är tom.",
+                        style: TextStyle(color: Colors.white),
+                      ));
+                    }
+                    if (addedToShoppingList.isNotEmpty && addedToCart.isEmpty) {
+                      return ListView(
+                        shrinkWrap: true,
+                        children: List<Widget>.of(addedToShoppingList)
+                          ..add(Padding(
+                            padding: EdgeInsets.only(top: 20),
+                            child: Center(
+                              child: IconButton(
+                                iconSize: 35.0,
+                                icon: Icon(Icons.delete, color: Colors.white),
+                                onPressed: () {
+                                  setState(() {
+                                    _shoppingListBloc
+                                        .add(DeleteShoppingListEvent());
+                                  });
+                                },
+                              ),
+                            ),
+                          )),
+                      );
+                    }
                     return ListView(
                       shrinkWrap: true,
                       children: List<Widget>.of(addedToShoppingList)
                         ..add(ruler)
-                        ..addAll(addedToCart),
+                        ..addAll(addedToCart)
+                        ..add(Padding(
+                          padding: EdgeInsets.only(top: 20),
+                          child: Center(
+                            child: IconButton(
+                              iconSize: 35.0,
+                              icon: Icon(Icons.delete, color: Colors.white),
+                              onPressed: () {
+                                setState(() {
+                                  _shoppingListBloc
+                                      .add(DeleteShoppingListEvent());
+                                });
+                              },
+                            ),
+                          ),
+                        )),
                     );
                   default:
                     return Center(
-                      child: Text(
-                        'Failed to fetch items. Failed to get a state.',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    );
+                        child: Text(
+                      "Listan är tom.",
+                      style: TextStyle(color: Colors.white),
+                    ));
                 }
               },
             ),
@@ -156,32 +199,47 @@ class ItemContainer extends StatefulWidget {
 
 class _ItemContainerState extends State<ItemContainer> {
   final double _opacity = 0.6;
+  late ShoppingListBloc _shoppingListBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _shoppingListBloc = context.read<ShoppingListBloc>();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 3),
+        padding: EdgeInsets.only(left: 20, right: 20, top: 5, bottom: 5),
         child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: [
-                widget.itemStatus == ItemStatus.ADDED_TO_CART
-                    ? Colors.green.withOpacity(_opacity)
-                    : Colors.tealAccent.withOpacity(_opacity),
-                Colors.white.withOpacity(_opacity),
-              ],
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  widget.itemStatus == ItemStatus.ADDED_TO_CART
+                      ? Colors.green.withOpacity(_opacity)
+                      : Colors.tealAccent.withOpacity(_opacity),
+                  Colors.white.withOpacity(_opacity),
+                ],
+              ),
             ),
-          ),
-          child: ListTile(
+            child: ListTile(
               title: Text(
                 widget.itemDesc,
                 style: TextStyle(color: Colors.white),
               ),
-              trailing: _getStatusIcon(widget.itemStatus)),
-        ));
+              trailing: IconButton(
+                icon: _getStatusIcon(widget.itemStatus),
+                onPressed: () {
+                  setState(() {
+                    Item item = Item(widget.itemDesc, widget.itemStatus);
+                    _shoppingListBloc.add(AddToCartEvent(item));
+                  });
+                },
+              ),
+            )));
   }
 
   Icon _getStatusIcon(ItemStatus flightStatus) {
