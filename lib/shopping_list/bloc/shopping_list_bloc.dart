@@ -1,8 +1,9 @@
 import 'package:bloc/bloc.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_event.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_state.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/models/shopping_list.dart';
 import 'package:shoppinglist_app_mobile/shopping_list_repository.dart';
-import 'package:rxdart/rxdart.dart';
 
 class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
   ShoppingListBloc({required this.shoppingRepository}) : super(ShoppingState());
@@ -10,9 +11,9 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
 
   @override
   Stream<Transition<ShoppingListEvent, ShoppingState>> transformEvents(
-      Stream<ShoppingListEvent> events,
-      TransitionFunction<ShoppingListEvent, ShoppingState> transitionFn,
-      ) {
+    Stream<ShoppingListEvent> events,
+    TransitionFunction<ShoppingListEvent, ShoppingState> transitionFn,
+  ) {
     return super.transformEvents(
       events.debounceTime(const Duration(milliseconds: 200)),
       transitionFn,
@@ -27,45 +28,61 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
       yield await _mapAddNewItemToState(event);
     } else if (event is AddToCartEvent) {
       yield await _mapAddToCartToState(event);
+    } else if (event is DeleteShoppingListEvent) {
+      yield await _mapDeleteShoppingListToState();
     }
   }
 
-  Future<ShoppingState> _mapGetShoppingListToState()
-  async {
+  Future<ShoppingState> _mapGetShoppingListToState() async {
     try {
-      final items = await shoppingRepository.fetchShoppingListItems();
+      final ShoppingList items =
+          await shoppingRepository.fetchShoppingListItems();
       return state.copyWith(
           status: ShoppingListStatus.success,
-          items: items
-      );
+          addedToShoppingList: items.addedToShoppingList,
+          addedToCart: items.addedToCart);
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }
   }
 
-  Future<ShoppingState> _mapAddNewItemToState(AddNewItemEvent event)
-  async {
+  Future<ShoppingState> _mapAddNewItemToState(AddNewItemEvent event) async {
     try {
       await shoppingRepository.addItemToShoppingList(event.itemName);
-      final items = await shoppingRepository.fetchShoppingListItems();
+      final ShoppingList items =
+          await shoppingRepository.fetchShoppingListItems();
       return state.copyWith(
           status: ShoppingListStatus.success,
-          items: items
-      );
+          addedToShoppingList: items.addedToShoppingList,
+          addedToCart: items.addedToCart);
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }
   }
 
-  Future<ShoppingState> _mapAddToCartToState(AddToCartEvent event)
-  async {
+  Future<ShoppingState> _mapAddToCartToState(AddToCartEvent event) async {
     try {
       await shoppingRepository.addItemToCart(event.item);
-      final items = await shoppingRepository.fetchShoppingListItems();
+      final ShoppingList items =
+          await shoppingRepository.fetchShoppingListItems();
       return state.copyWith(
           status: ShoppingListStatus.success,
-          items: items
-      );
+          addedToShoppingList: items.addedToShoppingList,
+          addedToCart: items.addedToCart);
+    } on Exception {
+      return state.copyWith(status: ShoppingListStatus.failure);
+    }
+  }
+
+  Future<ShoppingState> _mapDeleteShoppingListToState() async {
+    try {
+      await shoppingRepository.clearShoppingList();
+      final ShoppingList emptyList =
+          await shoppingRepository.fetchShoppingListItems();
+      return state.copyWith(
+          status: ShoppingListStatus.success,
+          addedToShoppingList: emptyList.addedToShoppingList,
+          addedToCart: emptyList.addedToCart);
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }

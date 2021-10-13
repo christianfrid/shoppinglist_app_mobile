@@ -1,0 +1,1 @@
+enum ItemStatus { ADDED_TO_SHOPPING_LIST, ADDED_TO_CART }

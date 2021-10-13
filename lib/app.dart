@@ -2,13 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shoppinglist_app_mobile/shopping_list/view/list_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_bloc.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/view/list_page_base.dart';
 import 'package:shoppinglist_app_mobile/shopping_list_repository.dart';
 
 class App extends StatelessWidget {
-  const App({Key? key, required this.shoppingRepository}) : super(key: key);
-
-  final ShoppingRepository shoppingRepository;
+  const App({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,14 @@ class App extends StatelessWidget {
             indent: 10,
             endIndent: 30,
           )),
-      home: ListPage(title: 'Inköpslista', shoppingRepository: shoppingRepository),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => BlocProvider(
+            lazy: false,
+            create: (_) =>
+                ShoppingListBloc(shoppingRepository: ShoppingRepository()),
+            child: ListPageBase(title: 'Inköpslista')),
+      },
     );
   }
 }

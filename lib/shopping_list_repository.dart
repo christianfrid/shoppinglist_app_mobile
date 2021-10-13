@@ -3,75 +3,62 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:http/http.dart' as http;
-import 'package:shoppinglist_app_mobile/shopping_list/models/ItemStatus.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/models/item_status.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/models/item.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/models/shopping_list.dart';
 
 abstract class BackendInterface {
   /// Throws [NetworkException]
-  Future<List<Item>> fetchShoppingListItems();
-  Future<List<Item>> addItemToShoppingList(String itemName);
-  Future<List<Item>> addItemToCart(Item item);
+  Future<ShoppingList> fetchShoppingListItems();
+  Future<int> addItemToShoppingList(String desc);
+  Future<int> addItemToCart(Item item);
+  Future<int> clearShoppingList();
 }
 
 class ShoppingRepository implements BackendInterface {
-
-  List<Item> _convertItemsResponse(String json){
-    print((jsonDecode(json) as List));
-    return (jsonDecode(json) as List).map((i) => Item.fromJson(i)).toList();
+  @override
+  Future<int> addItemToCart(Item item) async {
+    log("Trying to set \"" +
+        item.desc +
+        "\" to " +
+        EnumToString.convertToString(ItemStatus.ADDED_TO_SHOPPING_LIST) +
+        "...");
+    final response = await http.put(Uri.parse(
+        'https://existenz.ew.r.appspot.com/v1/shoppinglist/item/cart?itemId=${item.id}'));
+    return response.statusCode;
   }
 
   @override
-  Future<List<Item>> addItemToCart(Item item) async {
-    log("Trying to set \"" + item.itemDesc + "\" to ADDED_TO_CART...");
-    final response = await http.put(
-      Uri.parse('http://existenz.ew.r.appspot.com/v1/shoppinglist/item/update'),
-      headers: <String, String>{
-        "Content-Type": "application/json; charset=UTF-8",
-      },
-      body: jsonEncode(<String, String>{
-        "item_desc": item.itemDesc,
-        "item_status": EnumToString.convertToString(ItemStatus.IN_SHOPPING_LIST)
-      }),
-    );
-    if (response.statusCode == 200) {
-      return _convertItemsResponse(response.body);
-    }
-    log("Response != 200. Returning empty list.");
-    return List.empty();
-  }
-
-  @override
-  Future<List<Item>> addItemToShoppingList(String itemDesc) async {
-    log("Trying to add \"" + itemDesc + "\" to shopping list...");
+  Future<int> addItemToShoppingList(String desc) async {
+    log("Trying to add \"" + desc + "\" to shopping list...");
     final response = await http.post(
-      Uri.parse('http://existenz.ew.r.appspot.com/v1/shoppinglist/item/add'),
+      Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist/item/add'),
       headers: <String, String>{
         "Content-Type": "application/json; charset=UTF-8",
       },
-      body: jsonEncode(<String, String>{
-        "item_desc": itemDesc,
-        "item_status": EnumToString.convertToString(ItemStatus.IN_SHOPPING_LIST)
-      }),
+      body: jsonEncode(<String, String>{"item_desc": desc}),
     );
-    if (response.statusCode == 200) {
-      return _convertItemsResponse(response.body);
-    }
-    log("Response != 200. Returning empty list.");
-    return List.empty();
+    return response.statusCode;
   }
 
   @override
-  Future<List<Item>> fetchShoppingListItems() async {
+  Future<ShoppingList> fetchShoppingListItems() async {
     log('Fetching current shopping list...');
-    final response = await http.get(
-        Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist/items')
-    );
+    final response = await http
+        .get(Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist'));
     if (response.statusCode == 200) {
-      return _convertItemsResponse(response.body);
+      Map<String, dynamic> jsonMap = jsonDecode(response.body);
+      return ShoppingList.fromJson(jsonMap);
     }
     log("Response != 200. Returning empty list.");
-    return List.empty();
+    return ShoppingList(List.empty(), List.empty());
   }
 
+  @override
+  Future<int> clearShoppingList() async {
+    log('Deleting shopping list...');
+    final response = await http.delete(
+        Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist/clear'));
+    return response.statusCode;
+  }
 }
-

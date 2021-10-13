@@ -14,3 +14,4 @@ class AddToCartEvent extends ShoppingListEvent {
   final Item item;
   AddToCartEvent(this.item);
 }
+class DeleteShoppingListEvent extends ShoppingListEvent {}

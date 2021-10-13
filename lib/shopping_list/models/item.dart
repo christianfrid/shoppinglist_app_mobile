@@ -1,20 +1,20 @@
 import 'package:enum_to_string/enum_to_string.dart';
-import 'package:shoppinglist_app_mobile/shopping_list/models/ItemStatus.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/models/item_status.dart';
 
 class Item {
-  final String itemDesc;
-  final ItemStatus itemStatus;
-  Item(this.itemDesc, this.itemStatus);
+  final String id;
+  final String desc;
+  final String order;
+  ItemStatus status;
+  Item(this.id, this.desc, this.order, this.status);
 
   @override
   String toString() {
-    return itemDesc + " " + itemStatus.toString();
+    return id + " " + desc + " " + order + " " + status.toString();
   }
 
   factory Item.fromJson(Map<String, dynamic> jsonMap) {
-    return Item(
-        jsonMap['item_desc'],
-        EnumToString.fromString(ItemStatus.values, jsonMap['item_status'])!
-    );
+    return Item(jsonMap['id'], jsonMap['desc'], jsonMap['order'],
+        EnumToString.fromString(ItemStatus.values, jsonMap['status'])!);
   }
 }
