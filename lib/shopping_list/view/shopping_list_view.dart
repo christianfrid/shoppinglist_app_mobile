@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:convert' show utf8;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,11 +7,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_bloc.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_event.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_state.dart';
-import 'package:shoppinglist_app_mobile/shopping_list/models/item_status.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/models/item.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/models/item_status.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/view/add_item_dialog_box.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/view/bg_animation/background.dart';
-import 'dart:convert' show utf8;
 
 class ShoppingListView extends StatefulWidget {
   final AnimationController controller;
@@ -106,91 +106,79 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                     List<ItemContainer> addedToShoppingList = state
                         .addedToShoppingList
                         .map((item) => ItemContainer(
-                            id: item.id,
-                            desc: item.desc,
-                            order: item.order,
-                            status: item.status))
+                        id: item.id,
+                        desc: item.desc,
+                        order: item.order,
+                        status: item.status))
                         .toList();
                     List<ItemContainer> addedToCart = state.addedToCart
                         .map((item) => ItemContainer(
-                            id: item.id,
-                            desc: item.desc,
-                            order: item.order,
-                            status: item.status))
+                        id: item.id,
+                        desc: item.desc,
+                        order: item.order,
+                        status: item.status))
                         .toList();
-                    Widget ruler = Padding(
-                      padding: EdgeInsets.only(left: 30, bottom: 10, top: 10),
-                      child: Row(children: [
-                        Text(
-                          "Tillagt i kundvagnen",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        Expanded(child: Divider())
-                      ]),
-                    );
 
-                    if (addedToShoppingList.isEmpty && addedToCart.isEmpty) {
-                      return Center(
-                          child: Text(
-                        "Listan är tom.",
-                        style: TextStyle(color: Colors.white),
-                      ));
-                    }
-                    if (addedToShoppingList.isNotEmpty && addedToCart.isEmpty) {
+                    if (addedToShoppingList.isNotEmpty &&
+                        addedToCart.isEmpty) {
                       return ListView(
                         shrinkWrap: true,
                         children: List<Widget>.of(addedToShoppingList)
-                          ..add(Padding(
-                            padding: EdgeInsets.only(top: 10),
-                            child: Center(
-                              child: IconButton(
-                                iconSize: 35.0,
-                                icon: Icon(Icons.delete_rounded,
-                                    color: Colors.white),
-                                onPressed: () {
-                                  setState(() {
-                                    _shoppingListBloc
-                                        .add(DeleteShoppingListEvent());
-                                  });
-                                },
-                              ),
-                            ),
-                          )),
+                          ..add(_buildDeleteButton()),
                       );
                     }
-                    return ListView(
-                      shrinkWrap: true,
-                      children: List<Widget>.of(addedToShoppingList)
-                        ..add(ruler)
-                        ..addAll(addedToCart)
-                        ..add(Padding(
-                          padding: EdgeInsets.only(top: 20),
-                          child: Center(
-                            child: IconButton(
-                              iconSize: 35.0,
-                              icon: Icon(Icons.delete, color: Colors.white),
-                              onPressed: () {
-                                setState(() {
-                                  _shoppingListBloc
-                                      .add(DeleteShoppingListEvent());
-                                });
-                              },
-                            ),
-                          ),
-                        )),
-                    );
-                  default:
+                    if (addedToCart.isNotEmpty) {
+                      return ListView(
+                        shrinkWrap: true,
+                        children: List<Widget>.of(addedToShoppingList)
+                          ..add(_buildRuler())
+                          ..addAll(addedToCart)
+                          ..add(_buildDeleteButton()),
+                      );
+                    }
                     return Center(
                         child: Text(
-                      "Listan är tom.",
-                      style: TextStyle(color: Colors.white),
-                    ));
+                          "Listan är tom.",
+                          style: TextStyle(color: Colors.white),
+                        ));
+                  default:
+                    return Placeholder();
                 }
               },
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildDeleteButton() {
+    return Padding(
+      padding: EdgeInsets.only(top: 10),
+      child: Center(
+        child: IconButton(
+          iconSize: 35.0,
+          icon: Icon(Icons.delete_rounded, color: Colors.white),
+          onPressed: () {
+            setState(() {
+              _shoppingListBloc.add(DeleteShoppingListEvent());
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRuler() {
+    return Padding(
+      padding: EdgeInsets.only(left: 30, bottom: 10, top: 10),
+      child: Row(children: [
+        Text(
+          "Tillagt i kundvagnen",
+          style: TextStyle(color: Colors.white),
+        ),
+        Expanded(child: Divider())
+      ]),
     );
   }
 }

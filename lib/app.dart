@@ -23,6 +23,9 @@ class App extends StatelessWidget {
         SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
       }
     }
+    ShoppingRepository shoppingRepository = new ShoppingRepository();
+    shoppingRepository.wake();
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -39,7 +42,7 @@ class App extends StatelessWidget {
         '/': (context) => BlocProvider(
             lazy: false,
             create: (_) =>
-                ShoppingListBloc(shoppingRepository: ShoppingRepository()),
+                ShoppingListBloc(shoppingRepository: shoppingRepository),
             child: ListPageBase(title: 'Inköpslista')),
       },
     );
