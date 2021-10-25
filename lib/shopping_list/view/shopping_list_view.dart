@@ -35,120 +35,116 @@ class _ShoppingListViewState extends State<ShoppingListView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        ShaderMask(
-          shaderCallback: (rect) {
-            return LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: [
-                gradientStart,
-                getBackground()
-                    .evaluate(AlwaysStoppedAnimation(widget.controller.value))!
-              ],
-            ).createShader(rect);
-          },
-          blendMode: BlendMode.srcATop,
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: ExactAssetImage('assets/images/github_globe_edit1.jpg'),
-                fit: BoxFit.cover,
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          var result = await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AddItemDialogBox();
+              });
+          _shoppingListBloc.add(AddNewItemEvent(result));
+        },
+        child: const Icon(Icons.add, size: 30,),
+        backgroundColor: Colors.teal,
+      ),
+      body: Stack(
+        children: <Widget>[
+          ShaderMask(
+            shaderCallback: (rect) {
+              return LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  gradientStart,
+                  getBackground().evaluate(
+                      AlwaysStoppedAnimation(widget.controller.value))!
+                ],
+              ).createShader(rect);
+            },
+            blendMode: BlendMode.srcATop,
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image:
+                      ExactAssetImage('assets/images/github_globe_edit1.jpg'),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
-        ),
-        ListView(
-          children: [
-            Padding(
-              padding:
-                  EdgeInsets.only(left: 30, right: 40, top: 40, bottom: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Inköpslista",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 40),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.add_outlined,
-                      color: Colors.white,
-                      size: 45,
+          ListView(
+            children: [
+              Padding(
+                padding:
+                    EdgeInsets.only(left: 30, right: 40, top: 40, bottom: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Inköpslista",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 40),
                     ),
-                    onPressed: () async {
-                      var result = await showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AddItemDialogBox();
-                          });
-                      _shoppingListBloc.add(AddNewItemEvent(result));
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            BlocBuilder<ShoppingListBloc, ShoppingState>(
-              builder: (BuildContext context, ShoppingState state) {
-                switch (state.status) {
-                  case ShoppingListStatus.failure:
-                    return Center(
-                      child: Text(
-                        'Failed to fetch items',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    );
-                  case ShoppingListStatus.success:
-                    List<ItemContainer> addedToShoppingList = state
-                        .addedToShoppingList
-                        .map((item) => ItemContainer(
-                        id: item.id,
-                        desc: item.desc,
-                        order: item.order,
-                        status: item.status))
-                        .toList();
-                    List<ItemContainer> addedToCart = state.addedToCart
-                        .map((item) => ItemContainer(
-                        id: item.id,
-                        desc: item.desc,
-                        order: item.order,
-                        status: item.status))
-                        .toList();
-
-                    if (addedToShoppingList.isNotEmpty &&
-                        addedToCart.isEmpty) {
-                      return ListView(
-                        shrinkWrap: true,
-                        children: List<Widget>.of(addedToShoppingList)
-                          ..add(_buildDeleteButton()),
-                      );
-                    }
-                    if (addedToCart.isNotEmpty) {
-                      return ListView(
-                        shrinkWrap: true,
-                        children: List<Widget>.of(addedToShoppingList)
-                          ..add(_buildRuler())
-                          ..addAll(addedToCart)
-                          ..add(_buildDeleteButton()),
-                      );
-                    }
-                    return Center(
+              BlocBuilder<ShoppingListBloc, ShoppingState>(
+                builder: (BuildContext context, ShoppingState state) {
+                  switch (state.status) {
+                    case ShoppingListStatus.failure:
+                      return Center(
                         child: Text(
-                          "Listan är tom.",
+                          'Failed to fetch items',
                           style: TextStyle(color: Colors.white),
-                        ));
-                  default:
-                    return Placeholder();
-                }
-              },
-            ),
-          ],
-        ),
-      ],
+                        ),
+                      );
+                    case ShoppingListStatus.success:
+                      List<ItemContainer> addedToShoppingList = state
+                          .addedToShoppingList
+                          .map((item) => ItemContainer(
+                              id: item.id,
+                              desc: item.desc,
+                              order: item.order,
+                              status: item.status))
+                          .toList();
+                      List<ItemContainer> addedToCart = state.addedToCart
+                          .map((item) => ItemContainer(
+                              id: item.id,
+                              desc: item.desc,
+                              order: item.order,
+                              status: item.status))
+                          .toList();
+
+                      if (addedToShoppingList.isNotEmpty &&
+                          addedToCart.isEmpty) {
+                        return ListView(
+                          shrinkWrap: true,
+                          children: List<Widget>.of(addedToShoppingList)
+                            ..add(_buildDeleteButton()),
+                        );
+                      }
+                      if (addedToCart.isNotEmpty) {
+                        return ListView(
+                          shrinkWrap: true,
+                          children: List<Widget>.of(addedToShoppingList)
+                            ..add(_buildRuler())
+                            ..addAll(addedToCart)
+                            ..add(_buildDeleteButton()),
+                        );
+                      }
+                      return Center();
+                    default:
+                      return Center();
+                  }
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
