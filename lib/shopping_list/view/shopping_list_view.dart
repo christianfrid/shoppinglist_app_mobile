@@ -74,6 +74,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
             ),
           ),
           ListView(
+            shrinkWrap: true,
             children: [
               Padding(
                 padding:
