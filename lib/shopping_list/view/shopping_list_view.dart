@@ -10,6 +10,7 @@ import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_state.d
 import 'package:shoppinglist_app_mobile/shopping_list/models/item.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/models/item_status.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/view/add_item_dialog_box.dart';
+import 'package:uuid/uuid.dart';
 
 class ShoppingListView extends StatefulWidget {
   const ShoppingListView({required Key key}) : super(key: key);
@@ -21,6 +22,8 @@ class ShoppingListView extends StatefulWidget {
 class _ShoppingListViewState extends State<ShoppingListView> {
   Color gradientStart = Colors.transparent;
   late ShoppingListBloc _shoppingListBloc;
+  late List<Dismissible> _addedToShoppingList;
+  late List<Dismissible> _addedToCart;
 
   @override
   void initState() {
@@ -44,31 +47,31 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                 ),
               ));
         case ShoppingListStatus.success:
-          List<ItemContainer> addedToShoppingList = state.addedToShoppingList
-              .map((item) => ItemContainer(
+          _addedToShoppingList = state.addedToShoppingList
+              .map((item) => _setDismissable(ItemContainer(
                   id: item.id,
                   desc: item.desc,
                   order: item.order,
-                  status: item.status))
+                  status: item.status)))
               .toList();
-          List<ItemContainer> addedToCart = state.addedToCart
-              .map((item) => ItemContainer(
+          _addedToCart = state.addedToCart
+              .map((item) => _setDismissable(ItemContainer(
                   id: item.id,
                   desc: item.desc,
                   order: item.order,
-                  status: item.status))
+                  status: item.status)))
               .toList();
           return Scaffold(
               backgroundColor: Colors.transparent,
               floatingActionButton: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children:
-                      _buildActionButtons(addedToShoppingList, addedToCart)),
+                      _buildActionButtons(_addedToShoppingList, _addedToCart)),
               body: CustomScrollView(
                 slivers: [
                   SliverList(
                     delegate: SliverChildListDelegate(
-                      _buildShoppingList(addedToShoppingList, addedToCart),
+                      _buildShoppingList(_addedToShoppingList, _addedToCart),
                     ),
                   ),
                 ],
@@ -80,7 +83,17 @@ class _ShoppingListViewState extends State<ShoppingListView> {
     });
   }
 
-  List<Widget> _buildShoppingList(List<Widget> addedToShoppingList, List<Widget> addedToCart) {
+  List<Widget> _buildShoppingList(
+      List<Widget> addedToShoppingList, List<Widget> addedToCart) {
+    // Only add ruler when something is added to cart
+    if (addedToShoppingList.isEmpty && addedToCart.isNotEmpty) {
+      return [
+        _buildHeader(),
+        Column(
+          children: addedToCart,
+        )
+      ];
+    }
     if (addedToCart.isNotEmpty) {
       return [
         _buildHeader(),
@@ -103,7 +116,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: EdgeInsets.only(left: 30, right: 40, top: 40, bottom: 20),
+      padding: EdgeInsets.only(left: 30, right: 40, top: 60, bottom: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -120,6 +133,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
   List<Widget> _buildActionButtons(List addedToShoppingList, List addedToCart) {
     // AddButton is always needed
     FloatingActionButton addItemButton = FloatingActionButton(
+      heroTag: Uuid().v4().toString(),
       onPressed: () async {
         var result = await showDialog(
             context: context,
@@ -141,6 +155,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
         Padding(
           padding: EdgeInsets.only(bottom: 15),
           child: FloatingActionButton(
+            heroTag: Uuid().v4().toString(),
             onPressed: () async {
               _shoppingListBloc.add(DeleteShoppingListEvent());
             },
@@ -167,6 +182,19 @@ class _ShoppingListViewState extends State<ShoppingListView> {
         ),
         Expanded(child: Divider())
       ]),
+    );
+  }
+
+  Dismissible _setDismissable(ItemContainer itemContainer) {
+    return Dismissible(
+      key: Key("${itemContainer.id}"),
+      background: Container(
+        color: Colors.transparent,
+      ),
+      onDismissed: (DismissDirection direction) {
+        _shoppingListBloc.add(DeleteOneItemEvent(itemContainer.id));
+      },
+      child: itemContainer,
     );
   }
 }

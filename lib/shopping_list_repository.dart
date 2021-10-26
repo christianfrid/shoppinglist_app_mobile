@@ -14,6 +14,7 @@ abstract class BackendInterface {
   Future<ShoppingList> fetchShoppingListItems();
   Future<int> addItemToShoppingList(String desc);
   Future<int> addItemToCart(Item item);
+  Future<int> deleteOneItem(String id);
   Future<int> clearShoppingList();
 }
 
@@ -65,10 +66,20 @@ class ShoppingRepository implements BackendInterface {
   }
 
   @override
+  Future<int> deleteOneItem(String id) async {
+    log("Trying to delete \"" + id + "\" from shopping list...");
+    final response = await http.delete(
+      Uri.parse(
+          'https://existenz.ew.r.appspot.com/v1/shoppinglist/item/delete?itemId=${id}'),
+    );
+    return response.statusCode;
+  }
+
+  @override
   Future<int> wake() async {
     log('Waking backend...');
-    final response = await http.get(
-        Uri.parse('https://existenz.ew.r.appspot.com/v1/wake'));
+    final response =
+        await http.get(Uri.parse('https://existenz.ew.r.appspot.com/v1/wake'));
     return response.statusCode;
   }
 }
