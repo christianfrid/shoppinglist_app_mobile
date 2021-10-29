@@ -41,8 +41,9 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
           await shoppingRepository.fetchShoppingListItems();
       return state.copyWith(
           status: ShoppingListStatus.success,
-          addedToShoppingList: items.addedToShoppingList,
-          addedToCart: items.addedToCart);
+          allItems: []
+            ..addAll(items.addedToShoppingList)
+            ..addAll(items.addedToCart));
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }
@@ -55,8 +56,9 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
           await shoppingRepository.fetchShoppingListItems();
       return state.copyWith(
           status: ShoppingListStatus.success,
-          addedToShoppingList: items.addedToShoppingList,
-          addedToCart: items.addedToCart);
+          allItems: []
+            ..addAll(items.addedToShoppingList)
+            ..addAll(items.addedToCart));
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }
@@ -69,8 +71,9 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
           await shoppingRepository.fetchShoppingListItems();
       return state.copyWith(
           status: ShoppingListStatus.success,
-          addedToShoppingList: items.addedToShoppingList,
-          addedToCart: items.addedToCart);
+          allItems: []
+            ..addAll(items.addedToShoppingList)
+            ..addAll(items.addedToCart));
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }
@@ -83,22 +86,25 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
           await shoppingRepository.fetchShoppingListItems();
       return state.copyWith(
           status: ShoppingListStatus.success,
-          addedToShoppingList: emptyList.addedToShoppingList,
-          addedToCart: emptyList.addedToCart);
+          allItems: []
+            ..addAll(emptyList.addedToShoppingList)
+            ..addAll(emptyList.addedToCart));
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }
   }
 
-  Future<ShoppingState> _mapDeleteOneItemEventToState(DeleteOneItemEvent event) async {
+  Future<ShoppingState> _mapDeleteOneItemEventToState(
+      DeleteOneItemEvent event) async {
     try {
       await shoppingRepository.deleteOneItem(event.id);
       final ShoppingList items =
           await shoppingRepository.fetchShoppingListItems();
       return state.copyWith(
           status: ShoppingListStatus.success,
-          addedToShoppingList: items.addedToShoppingList,
-          addedToCart: items.addedToCart);
+          allItems: []
+            ..addAll(items.addedToShoppingList)
+            ..addAll(items.addedToCart));
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }

@@ -5,26 +5,22 @@ enum ShoppingListStatus { initial, success, failure }
 
 class ShoppingState extends Equatable {
   final ShoppingListStatus status;
-  final List<Item> addedToShoppingList;
-  final List<Item> addedToCart;
+  final List<Item> allItems;
 
   ShoppingState({
     this.status = ShoppingListStatus.initial,
-    this.addedToShoppingList = const <Item>[],
-    this.addedToCart = const <Item>[],
+    this.allItems = const <Item>[],
   });
 
   ShoppingState copyWith({
     ShoppingListStatus? status,
-    List<Item>? addedToShoppingList,
-    List<Item>? addedToCart,
+    List<Item>? allItems,
   }) {
     return ShoppingState(
         status: status ?? this.status,
-        addedToShoppingList: addedToShoppingList ?? this.addedToShoppingList,
-        addedToCart: addedToCart ?? this.addedToCart);
+        allItems: allItems ?? this.allItems);
   }
 
   @override
-  List<Object> get props => [status, addedToShoppingList, addedToCart];
+  List<Object> get props => [status, allItems];
 }
