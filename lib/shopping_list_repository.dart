@@ -9,9 +9,12 @@ import 'package:shoppinglist_app_mobile/shopping_list/models/shopping_list.dart'
 
 abstract class BackendInterface {
   /// Throws [NetworkException]
+  ///
+  Future<int> wake();
   Future<ShoppingList> fetchShoppingListItems();
   Future<int> addItemToShoppingList(String desc);
   Future<int> addItemToCart(Item item);
+  Future<int> deleteOneItem(String id);
   Future<int> clearShoppingList();
 }
 
@@ -59,6 +62,24 @@ class ShoppingRepository implements BackendInterface {
     log('Deleting shopping list...');
     final response = await http.delete(
         Uri.parse('https://existenz.ew.r.appspot.com/v1/shoppinglist/clear'));
+    return response.statusCode;
+  }
+
+  @override
+  Future<int> deleteOneItem(String id) async {
+    log("Trying to delete \"" + id + "\" from shopping list...");
+    final response = await http.delete(
+      Uri.parse(
+          'https://existenz.ew.r.appspot.com/v1/shoppinglist/item/delete?itemId=${id}'),
+    );
+    return response.statusCode;
+  }
+
+  @override
+  Future<int> wake() async {
+    log('Waking backend...');
+    final response =
+        await http.get(Uri.parse('https://existenz.ew.r.appspot.com/v1/wake'));
     return response.statusCode;
   }
 }

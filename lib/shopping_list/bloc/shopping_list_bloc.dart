@@ -28,6 +28,8 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
       yield await _mapAddNewItemToState(event);
     } else if (event is AddToCartEvent) {
       yield await _mapAddToCartToState(event);
+    } else if (event is DeleteOneItemEvent) {
+      yield await _mapDeleteOneItemEventToState(event);
     } else if (event is DeleteShoppingListEvent) {
       yield await _mapDeleteShoppingListToState();
     }
@@ -83,6 +85,20 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingState> {
           status: ShoppingListStatus.success,
           addedToShoppingList: emptyList.addedToShoppingList,
           addedToCart: emptyList.addedToCart);
+    } on Exception {
+      return state.copyWith(status: ShoppingListStatus.failure);
+    }
+  }
+
+  Future<ShoppingState> _mapDeleteOneItemEventToState(DeleteOneItemEvent event) async {
+    try {
+      await shoppingRepository.deleteOneItem(event.id);
+      final ShoppingList items =
+          await shoppingRepository.fetchShoppingListItems();
+      return state.copyWith(
+          status: ShoppingListStatus.success,
+          addedToShoppingList: items.addedToShoppingList,
+          addedToCart: items.addedToCart);
     } on Exception {
       return state.copyWith(status: ShoppingListStatus.failure);
     }

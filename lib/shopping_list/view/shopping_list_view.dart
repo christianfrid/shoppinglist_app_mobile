@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:convert' show utf8;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,17 +7,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_bloc.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_event.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_state.dart';
-import 'package:shoppinglist_app_mobile/shopping_list/models/item_status.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/models/item.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/models/item_status.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/view/add_item_dialog_box.dart';
-import 'package:shoppinglist_app_mobile/shopping_list/view/bg_animation/background.dart';
-import 'dart:convert' show utf8;
+import 'package:uuid/uuid.dart';
 
 class ShoppingListView extends StatefulWidget {
-  final AnimationController controller;
-
-  const ShoppingListView({required Key key, required this.controller})
-      : super(key: key);
+  const ShoppingListView({required Key key}) : super(key: key);
 
   @override
   _ShoppingListViewState createState() => _ShoppingListViewState();
@@ -25,6 +22,8 @@ class ShoppingListView extends StatefulWidget {
 class _ShoppingListViewState extends State<ShoppingListView> {
   Color gradientStart = Colors.transparent;
   late ShoppingListBloc _shoppingListBloc;
+  late List<Dismissible> _addedToShoppingList;
+  late List<Dismissible> _addedToCart;
 
   @override
   void initState() {
@@ -35,162 +34,198 @@ class _ShoppingListViewState extends State<ShoppingListView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        ShaderMask(
-          shaderCallback: (rect) {
-            return LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: [
-                gradientStart,
-                getBackground()
-                    .evaluate(AlwaysStoppedAnimation(widget.controller.value))!
-              ],
-            ).createShader(rect);
-          },
-          blendMode: BlendMode.srcATop,
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: ExactAssetImage('assets/images/github_globe_edit1.jpg'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        ),
-        ListView(
-          children: [
-            Padding(
-              padding:
-                  EdgeInsets.only(left: 30, right: 40, top: 40, bottom: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Inköpslista",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 40),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.add_outlined,
-                      color: Colors.white,
-                      size: 45,
+    return BlocBuilder<ShoppingListBloc, ShoppingState>(
+        builder: (BuildContext context, ShoppingState state) {
+      switch (state.status) {
+        case ShoppingListStatus.failure:
+          return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Center(
+                child: Text(
+                  'Failed to fetch items',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ));
+        case ShoppingListStatus.success:
+          _addedToShoppingList = state.addedToShoppingList
+              .map((item) => _setDismissable(ItemContainer(
+                  id: item.id,
+                  desc: item.desc,
+                  order: item.order,
+                  status: item.status)))
+              .toList();
+          _addedToCart = state.addedToCart
+              .map((item) => _setDismissable(ItemContainer(
+                  id: item.id,
+                  desc: item.desc,
+                  order: item.order,
+                  status: item.status)))
+              .toList();
+          return Scaffold(
+              backgroundColor: Colors.transparent,
+              floatingActionButton: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children:
+                      _buildActionButtons(_addedToShoppingList, _addedToCart)),
+              body: CustomScrollView(
+                slivers: [
+                  SliverList(
+                    delegate: SliverChildListDelegate(
+                      _buildShoppingList(_addedToShoppingList, _addedToCart),
                     ),
-                    onPressed: () async {
-                      var result = await showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AddItemDialogBox();
-                          });
-                      _shoppingListBloc.add(AddNewItemEvent(result));
-                    },
                   ),
                 ],
-              ),
-            ),
-            BlocBuilder<ShoppingListBloc, ShoppingState>(
-              builder: (BuildContext context, ShoppingState state) {
-                switch (state.status) {
-                  case ShoppingListStatus.failure:
-                    return Center(
-                      child: Text(
-                        'Failed to fetch items',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    );
-                  case ShoppingListStatus.success:
-                    List<ItemContainer> addedToShoppingList = state
-                        .addedToShoppingList
-                        .map((item) => ItemContainer(
-                            id: item.id,
-                            desc: item.desc,
-                            order: item.order,
-                            status: item.status))
-                        .toList();
-                    List<ItemContainer> addedToCart = state.addedToCart
-                        .map((item) => ItemContainer(
-                            id: item.id,
-                            desc: item.desc,
-                            order: item.order,
-                            status: item.status))
-                        .toList();
-                    Widget ruler = Padding(
-                      padding: EdgeInsets.only(left: 30, bottom: 10, top: 10),
-                      child: Row(children: [
-                        Text(
-                          "Tillagt i kundvagnen",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        Expanded(child: Divider())
-                      ]),
-                    );
+              ));
 
-                    if (addedToShoppingList.isEmpty && addedToCart.isEmpty) {
-                      return Center(
-                          child: Text(
-                        "Listan är tom.",
-                        style: TextStyle(color: Colors.white),
-                      ));
-                    }
-                    if (addedToShoppingList.isNotEmpty && addedToCart.isEmpty) {
-                      return ListView(
-                        shrinkWrap: true,
-                        children: List<Widget>.of(addedToShoppingList)
-                          ..add(Padding(
-                            padding: EdgeInsets.only(top: 10),
-                            child: Center(
-                              child: IconButton(
-                                iconSize: 35.0,
-                                icon: Icon(Icons.delete_rounded,
-                                    color: Colors.white),
-                                onPressed: () {
-                                  setState(() {
-                                    _shoppingListBloc
-                                        .add(DeleteShoppingListEvent());
-                                  });
-                                },
-                              ),
-                            ),
-                          )),
-                      );
-                    }
-                    return ListView(
-                      shrinkWrap: true,
-                      children: List<Widget>.of(addedToShoppingList)
-                        ..add(ruler)
-                        ..addAll(addedToCart)
-                        ..add(Padding(
-                          padding: EdgeInsets.only(top: 20),
-                          child: Center(
-                            child: IconButton(
-                              iconSize: 35.0,
-                              icon: Icon(Icons.delete, color: Colors.white),
-                              onPressed: () {
-                                setState(() {
-                                  _shoppingListBloc
-                                      .add(DeleteShoppingListEvent());
-                                });
-                              },
-                            ),
-                          ),
-                        )),
-                    );
-                  default:
-                    return Center(
-                        child: Text(
-                      "Listan är tom.",
-                      style: TextStyle(color: Colors.white),
-                    ));
-                }
-              },
-            ),
-          ],
+        default:
+          return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: CustomScrollView(
+                slivers: [
+                  SliverList(
+                    delegate: SliverChildListDelegate([
+                      _buildHeader(),
+                    ]),
+                  ),
+                ],
+              ));
+      }
+    });
+  }
+
+  List<Widget> _buildShoppingList(
+      List<Widget> addedToShoppingList, List<Widget> addedToCart) {
+    // Only add ruler when something is added to cart
+    if (addedToShoppingList.isEmpty && addedToCart.isNotEmpty) {
+      return [
+        _buildHeader(),
+        Column(
+          children: addedToCart,
+        )
+      ];
+    }
+    if (addedToCart.isNotEmpty) {
+      return [
+        _buildHeader(),
+        Column(
+          children: addedToShoppingList,
         ),
-      ],
+        _buildRuler(),
+        Column(
+          children: addedToCart,
+        )
+      ];
+    }
+    return [
+      _buildHeader(),
+      Column(
+        children: addedToShoppingList,
+      ),
+    ];
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: EdgeInsets.only(left: 30, right: 40, top: 60, bottom: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Inköpslista",
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white, fontSize: 40),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildActionButtons(List addedToShoppingList, List addedToCart) {
+    // AddButton is always needed
+    FloatingActionButton addItemButton = FloatingActionButton(
+      heroTag: Uuid().v4().toString(),
+      onPressed: () async {
+        var result = await showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AddItemDialogBox();
+            });
+        _shoppingListBloc.add(AddNewItemEvent(result));
+      },
+      child: const Icon(
+        Icons.add,
+        size: 30,
+      ),
+      backgroundColor: Colors.teal,
+    );
+    FloatingActionButton syncButton = FloatingActionButton(
+      heroTag: Uuid().v4().toString(),
+      onPressed: () async {
+        _shoppingListBloc.add(GetShoppingListEvent());
+      },
+      child: const Icon(
+        Icons.sync,
+        size: 30,
+      ),
+      backgroundColor: Colors.teal,
+    );
+
+    // Add DeleteButton only if needed
+    if (addedToShoppingList.isNotEmpty || addedToCart.isNotEmpty) {
+      return [
+        Padding(
+          padding: EdgeInsets.only(bottom: 15),
+          child: syncButton,
+        ),
+        Padding(
+          padding: EdgeInsets.only(bottom: 15),
+          child: FloatingActionButton(
+            heroTag: Uuid().v4().toString(),
+            onPressed: () async {
+              _shoppingListBloc.add(DeleteShoppingListEvent());
+            },
+            child: const Icon(
+              Icons.delete_rounded,
+              size: 30,
+            ),
+            backgroundColor: Colors.teal,
+          ),
+        ),
+        addItemButton
+      ];
+    }
+    return [
+      Padding(
+        padding: EdgeInsets.only(bottom: 15),
+        child: syncButton,
+      ),
+      addItemButton
+    ];
+  }
+
+  Widget _buildRuler() {
+    return Padding(
+      padding: EdgeInsets.only(left: 30, bottom: 10, top: 10),
+      child: Row(children: [
+        Text(
+          "Tillagt i kundvagnen",
+          style: TextStyle(color: Colors.white),
+        ),
+        Expanded(child: Divider())
+      ]),
+    );
+  }
+
+  Dismissible _setDismissable(ItemContainer itemContainer) {
+    return Dismissible(
+      key: Key("${itemContainer.id}"),
+      background: Container(
+        color: Colors.transparent,
+      ),
+      onDismissed: (DismissDirection direction) {
+        _shoppingListBloc.add(DeleteOneItemEvent(itemContainer.id));
+      },
+      child: itemContainer,
     );
   }
 }

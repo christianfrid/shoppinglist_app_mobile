@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shoppinglist_app_mobile/shopping_list/bloc/shopping_list_bloc.dart';
-import 'package:shoppinglist_app_mobile/shopping_list/view/list_page_base.dart';
+import 'package:shoppinglist_app_mobile/shopping_list/view/animated_background_base.dart';
 import 'package:shoppinglist_app_mobile/shopping_list_repository.dart';
 
 class App extends StatelessWidget {
@@ -23,6 +23,9 @@ class App extends StatelessWidget {
         SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
       }
     }
+    ShoppingRepository shoppingRepository = new ShoppingRepository();
+    shoppingRepository.wake();
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -39,8 +42,8 @@ class App extends StatelessWidget {
         '/': (context) => BlocProvider(
             lazy: false,
             create: (_) =>
-                ShoppingListBloc(shoppingRepository: ShoppingRepository()),
-            child: ListPageBase(title: 'Inköpslista')),
+                ShoppingListBloc(shoppingRepository: shoppingRepository),
+            child: AnimatedBackgroundView(title: 'Inköpslista')),
       },
     );
   }
