@@ -78,7 +78,17 @@ class _ShoppingListViewState extends State<ShoppingListView> {
               ));
 
         default:
-          return Scaffold(backgroundColor: Colors.transparent, body: Center());
+          return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: CustomScrollView(
+                slivers: [
+                  SliverList(
+                    delegate: SliverChildListDelegate([
+                      _buildHeader(),
+                    ]),
+                  ),
+                ],
+              ));
       }
     });
   }
@@ -148,10 +158,25 @@ class _ShoppingListViewState extends State<ShoppingListView> {
       ),
       backgroundColor: Colors.teal,
     );
+    FloatingActionButton syncButton = FloatingActionButton(
+      heroTag: Uuid().v4().toString(),
+      onPressed: () async {
+        _shoppingListBloc.add(GetShoppingListEvent());
+      },
+      child: const Icon(
+        Icons.sync,
+        size: 30,
+      ),
+      backgroundColor: Colors.teal,
+    );
 
     // Add DeleteButton only if needed
     if (addedToShoppingList.isNotEmpty || addedToCart.isNotEmpty) {
       return [
+        Padding(
+          padding: EdgeInsets.only(bottom: 15),
+          child: syncButton,
+        ),
         Padding(
           padding: EdgeInsets.only(bottom: 15),
           child: FloatingActionButton(
@@ -169,7 +194,13 @@ class _ShoppingListViewState extends State<ShoppingListView> {
         addItemButton
       ];
     }
-    return [addItemButton];
+    return [
+      Padding(
+        padding: EdgeInsets.only(bottom: 15),
+        child: syncButton,
+      ),
+      addItemButton
+    ];
   }
 
   Widget _buildRuler() {
