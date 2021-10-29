@@ -27,7 +27,8 @@ class App extends StatelessWidget {
     shoppingRepository.wake();
 
     return MaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      title: "This won't show anywhere anyways.",
       theme: ThemeData(
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
